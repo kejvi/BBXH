@@ -41,6 +41,8 @@ const Login = () => {
           />
         </View>
 
+        
+
         {/* Login Button */}
         <TouchableOpacity style={styles.loginButton} onPress={() => { /* Add login functionality here */ }}>
           <Text style={styles.loginButtonText}>Log In</Text>
