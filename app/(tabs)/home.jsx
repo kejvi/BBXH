@@ -1,22 +1,21 @@
-import React, {useState} from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-
+import { FontAwesome5 } from '@expo/vector-icons';
 
 const App = () => {
   const [arr, setItems] = useState([1, 2, 3, 4]);
   const [isHome, setIsHome] = useState(true);
-  const purchaseDate = Date()
 
   const handlePress = () => {
     if (isHome) {
-      setIsHome(false)
-      setItems([5,6,7,8])
+      setIsHome(false);
+      setItems([5, 6, 7, 8]);  // Update to another set of items for the dumbbell icon
     } else {
-      setIsHome(true)
-      setItems([1,2,3,4])
+      setIsHome(true);
+      setItems([1, 2, 3, 4]);  // Reset back to the original set of items
     }
-  }
+  };
 
   return (
     <View style={styles.container}>
@@ -37,9 +36,15 @@ const App = () => {
               </View>
             ))}
           </ScrollView>
-          {/* Home Icon */}
-          <View style={styles.homeIconWrapper}>
-            <MaterialIcons onPress={handlePress} name={ isHome ? "home" : "exercise" } size={24} color="white" />
+          {/* Home / Dumbbell Icon */}
+          <View style={styles.iconWrapper}>
+            <TouchableOpacity onPress={handlePress}>
+              {isHome ? (
+                <MaterialIcons name="home" size={30} color="white" />
+              ) : (
+                <FontAwesome5 name="dumbbell" size={30} color="white" />
+              )}
+            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -49,12 +54,27 @@ const App = () => {
         contentContainerStyle={styles.scrollViewContentContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* 5 Containers with specific styles */}
+        {/* Containers with specific layout */}
         {arr.map((item, index) => (
-           <View key={index} style={styles.containerBox}>
-           <Text style={styles.containerText}> Workout {item}</Text>
-           <Text style={styles.containerText}> Lorem ipsum</Text>
-         </View>
+          <TouchableOpacity key={index} style={styles.containerBox}  onPress={() => router.push('/home')}>
+            {/* Image Section - Removed the image from the container */}
+            <Image
+              source={{ uri: 'https://via.placeholder.com/337x120' }}
+              style={styles.image}
+            />
+            {/* Text Section */}
+            <View style={styles.textSection}>
+              {/* Week Title */}
+              <Text style={styles.weekText}>Week {item}</Text>
+              {/* Workout Title */}
+              <Text style={styles.containerText}>Workout {item}</Text>
+              {/* Timer Section */}
+              <View style={styles.timerSection}>
+                <FontAwesome5 name="clock" size={14} color="#999" />
+                <Text style={styles.timerText}>30 seconds</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
         ))}
       </ScrollView>
     </View>
@@ -94,48 +114,74 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
-    backgroundColor: '#E84479', // Background color for circles
+    backgroundColor: '#E84479',
   },
   circleText: {
-    color: 'white', // White text color for better contrast with pink background
+    color: 'white',
     fontWeight: 'bold',
-    fontSize: 22, // Slightly increased font size (from 20 to 22)
+    fontSize: 22,
   },
-  homeIconWrapper: {
+  iconWrapper: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#E84479', // Same background as circles
+    backgroundColor: '#E84479',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 10,
   },
   /* ScrollView content styles */
   scrollViewContentContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 20, // Add some space at the bottom of the ScrollView
-    alignItems: 'center', // Align the containers horizontally in the center
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    flexGrow: 1,
   },
   /* Container styles */
   containerBox: {
-    width: 335, // Fixed width
-    height: 210, // Fixed height
-    marginBottom: 20, // Space between containers
-    borderRadius: 10, // Rounded corners (top left)
-    backgroundColor: '#f5f5f5', // Light grey background for each container
-    justifyContent: 'center', // Center content vertically
-    alignItems: 'center', // Center content horizontally
-    opacity: 1, // Make the containers visible
-    shadowColor: '#000', // Add shadow for smooth effect
+    width: '90%',
+    maxWidth: 337,
+    height: 210,
+    marginBottom: 20,
+    borderRadius: 10,
+    backgroundColor: '#f5f5f5',
+    overflow: 'hidden',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
-    elevation: 5, // For Android shadow
+    elevation: 5,
+  },
+  image: {
+    width: '100%',
+    height: 120,
+  },
+  textSection: {
+    flex: 1,
+    padding: 10,
+    backgroundColor: '#fff',
+  },
+  weekText: {
+    fontSize: 12,
+    color: '#999', // Gray text
+    textAlign: 'left', // Aligned to the left
+    marginBottom: 5, // Space between Week and Workout
   },
   containerText: {
     fontSize: 18,
     color: '#333',
     fontWeight: 'bold',
+    textAlign: 'left',
+  },
+  timerSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 5,
+  },
+  timerText: {
+    fontSize: 12,
+    color: '#999',
+    marginLeft: 5,
   },
 });
 

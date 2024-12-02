@@ -5,7 +5,7 @@ import icons from '../../constants/icons'; // Ensure this path is correct
 
 const TabIcon = ({ icon }) => {
   return (
-    <View>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 15 }}>
       <Image
         source={icon}
         resizeMode="contain"
@@ -21,7 +21,7 @@ const Layout = () => {
       screenOptions={{
         tabBarStyle: {
           height: 80,
-          justifyContent: 'center',
+          justifyContent: 'center',  // Center content vertically
           paddingBottom: 10,
         },
         tabBarShowLabel: false,
