@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { Redirect, router } from 'expo-router';
+
 
 const App = () => {
   const [arr, setItems] = useState([1, 2, 3, 4]);
@@ -56,7 +58,7 @@ const App = () => {
       >
         {/* Containers with specific layout */}
         {arr.map((item, index) => (
-          <TouchableOpacity key={index} style={styles.containerBox}  onPress={() => router.push('/home')}>
+          <TouchableOpacity key={index} style={styles.containerBox}  onPress={() => router.push('workout')}>
             {/* Image Section - Removed the image from the container */}
             <Image
               source={{ uri: 'https://via.placeholder.com/337x120' }}
