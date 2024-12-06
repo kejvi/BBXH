@@ -2,88 +2,134 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { Redirect, router } from 'expo-router';
-
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 
 const App = () => {
-  const [arr, setItems] = useState([1, 2, 3, 4]);
+  const [arr, setItems] = useState([1, 2, 3, 4]); // Days list
+  const [currentDay, setCurrentDay] = useState(1); // Track the current unlocked day
   const [isHome, setIsHome] = useState(true);
 
   const handlePress = () => {
     if (isHome) {
       setIsHome(false);
-      setItems([5, 6, 7, 8]);  // Update to another set of items for the dumbbell icon
+      setItems([5, 6, 7, 8]); // Update to another set of items for the dumbbell icon
     } else {
       setIsHome(true);
-      setItems([1, 2, 3, 4]);  // Reset back to the original set of items
+      setItems([1, 2, 3, 4]); // Reset back to the original set of items
     }
   };
 
+  const router = useRouter();
+
+  // Import images from local assets
+  const images = [
+    require('../../assets/images/Frame 60.png'),
+    require('../../assets/images/Frame 60 (1).png'),
+    require('../../assets/images/Frame 71.png'),
+  ];
+
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Mirmëngjesi Xhes</Text>
-        <View style={styles.headerContent}>
-          {/* Horizontal ScrollView */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContainer}
-          >
-            {/* Circles */}
-            {Array.from({ length: 15 }, (_, index) => (
-              <View key={index} style={styles.circle}>
-                <Text style={styles.circleText}>{index + 1}</Text>
-              </View>
-            ))}
-          </ScrollView>
-          {/* Home / Dumbbell Icon */}
-          <View style={styles.iconWrapper}>
-            <TouchableOpacity onPress={handlePress}>
-              {isHome ? (
-                <MaterialIcons name="home" size={30} color="white" />
-              ) : (
-                <FontAwesome5 name="dumbbell" size={30} color="white" />
-              )}
-            </TouchableOpacity>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerRow}>
+            <MaterialIcons
+              style={{ position: 'absolute', left: 10 }}
+              name="arrow-left"
+              size={24}
+              color="white"
+            />
+            <Text style={styles.headerText}>Mirmëngjesi Xhes</Text>
+          </View>
+          <View style={styles.headerContent}>
+            {/* Horizontal ScrollView */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContainer}
+              style={styles.scrollView}
+            >
+              {Array.from({ length: 15 }, (_, index) => {
+                const day = index + 1;
+                return (
+                  <View key={index} style={styles.circle}>
+                    <Text style={styles.circleText}>{day}</Text>
+                    {/* If the current day is locked, add the lock icon */}
+                    {day > currentDay && (
+                      <MaterialIcons
+                        name="lock"
+                        size={16} // Reduced lock icon size
+                        color="#fff"
+                        style={styles.lockIcon}
+                      />
+                    )}
+                  </View>
+                );
+              })}
+            </ScrollView>
+            {/* Home / Dumbbell Icon */}
+            <View style={styles.iconWrapper}>
+              <TouchableOpacity onPress={handlePress}>
+                {isHome ? (
+                  <MaterialIcons name="home" size={30} color="white" />
+                ) : (
+                  <FontAwesome5 name="dumbbell" size={30} color="white" />
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </View>
 
-      {/* ScrollView for containers */}
-      <ScrollView
-        contentContainerStyle={styles.scrollViewContentContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Containers with specific layout */}
-        {arr.map((item, index) => (
-          <TouchableOpacity key={index} style={styles.containerBox}  onPress={() => router.push('workout')}>
-            {/* Image Section - Removed the image from the container */}
-            <Image
-              source={{ uri: 'https://via.placeholder.com/337x120' }}
-              style={styles.image}
-            />
-            {/* Text Section */}
-            <View style={styles.textSection}>
-              {/* Week Title */}
-              <Text style={styles.weekText}>Week {item}</Text>
-              {/* Workout Title */}
-              <Text style={styles.containerText}>Workout {item}</Text>
-              {/* Timer Section */}
-              <View style={styles.timerSection}>
-                <FontAwesome5 name="clock" size={14} color="#999" />
-                <Text style={styles.timerText}>30 seconds</Text>
+        {/* ScrollView for containers */}
+        <ScrollView
+          contentContainerStyle={styles.scrollViewContentContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          {arr.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.containerBox}
+              onPress={() => {
+                // Unlock next day when a day is clicked
+                if (item === currentDay) {
+                  setCurrentDay(prevDay => prevDay + 1);
+                }
+                router.push('workout');
+              }}
+            >
+              {/* Image Section */}
+              <Image
+                source={
+                  index < images.length
+                    ? images[index] // Use specific images for the first three items
+                    : require('../../assets/images/Frame 60.png') // Default image for others
+                }
+                style={styles.image}
+              />
+              {/* Text Section */}
+              <View style={styles.textSection}>
+                <Text style={styles.weekText}>Week {item}</Text>
+                <Text style={styles.containerText}>Workout {item}</Text>
+                <View style={styles.timerSection}>
+                  <FontAwesome5 name="clock" size={14} color="#999" />
+                  <Text style={styles.timerText}>30 seconds</Text>
+                </View>
               </View>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   container: {
     flex: 1,
     backgroundColor: '#fff',
@@ -93,21 +139,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#EF87AA',
     padding: 20,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   headerText: {
     color: 'white',
     fontSize: 24,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 10,
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 10, // Added margin to create space between the text and ScrollView
   },
   scrollContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
+  },
+  scrollView: {
+    flexGrow: 0,
   },
   circle: {
     width: 50,
@@ -117,11 +169,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 10,
     backgroundColor: '#E84479',
+    position: 'relative', // Needed to position the lock icon inside the circle
   },
   circleText: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 22,
+  },
+  lockIcon: {
+    position: 'absolute',
+    bottom: 5,
+    right: 5,
   },
   iconWrapper: {
     width: 50,
@@ -165,9 +223,9 @@ const styles = StyleSheet.create({
   },
   weekText: {
     fontSize: 12,
-    color: '#999', // Gray text
-    textAlign: 'left', // Aligned to the left
-    marginBottom: 5, // Space between Week and Workout
+    color: '#999',
+    textAlign: 'left',
+    marginBottom: 5,
   },
   containerText: {
     fontSize: 18,

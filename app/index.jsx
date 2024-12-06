@@ -1,47 +1,58 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import {Redirect, router} from 'expo-router';
+import { Redirect, router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Login = () => {
   return (
-    <View style={styles.container}>
-      <Image
-        source={require('../assets/images/Rectangle 23.png')}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      />
-      <LinearGradient
-        colors={['transparent', '#060A11']}
-        locations={[0, 0.6]}
-        style={styles.gradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-      />
-      <View style={styles.content}>
-        <Text style={styles.logo}>Bodies By Xhes</Text>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Username"
-            placeholderTextColor="#9CA3AF"
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#9CA3AF"
-            secureTextEntry
-          />
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <Image
+          source={require('../assets/images/Rectangle 23.png')}
+          style={styles.backgroundImage}
+          resizeMode="cover"
+        />
+        <LinearGradient
+          colors={['transparent', '#060A11']}
+          locations={[0, 0.6]}
+          style={styles.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+        />
+        <View style={styles.content}>
+          <Text style={styles.logo}>Bodies By Xhes</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Username"
+              placeholderTextColor="#9CA3AF"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor="#9CA3AF"
+              secureTextEntry
+            />
+          </View>
+          <TouchableOpacity style={styles.loginButton} onPress={() => router.push('/home')}>
+            <Text style={styles.loginButtonText}>Log In</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => router.push('/forgot-password')}>
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.loginButton} onPress={() => router.push('/home')}>
-          <Text style={styles.loginButtonText}>Log In</Text>
-        </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#060A11', // Ensures background color in safe areas
+  },
   container: {
     flex: 1,
     width: '100%',
@@ -87,14 +98,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   input: {
-    width: 327,
+    width: 327, // Consistent width for alignment
     height: 44,
     backgroundColor: '#EEF2F5',
-    paddingLeft: 12,
+    paddingHorizontal: 12, // Adds horizontal padding for better alignment
     marginBottom: 12,
     borderRadius: 8,
     fontSize: 14,
-    color: '#9CA3AF',
+    color: '#000', // Updated for better contrast
+    alignSelf: 'center', // Ensures alignment in the center of the screen
   },
   loginButton: {
     width: 327,
@@ -109,6 +121,12 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  forgotPasswordText: {
+    color: '#E84479', // Same color as the button
+    marginTop: 10,
+    fontSize: 14,
+    textAlign: 'center',
   },
 });
 
