@@ -30,58 +30,53 @@ const App = () => {
   ];
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerRow}>
-            <MaterialIcons
-              style={{ position: 'absolute', left: 10 }}
-              name="arrow-left"
-              size={24}
-              color="white"
-            />
-            <Text style={styles.headerText}>Mirmëngjesi Xhes</Text>
-          </View>
-          <View style={styles.headerContent}>
-            {/* Horizontal ScrollView */}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.scrollContainer}
-              style={styles.scrollView}
-            >
-              {Array.from({ length: 15 }, (_, index) => {
-                const day = index + 1;
-                return (
-                  <View key={index} style={styles.circle}>
-                    <Text style={styles.circleText}>{day}</Text>
-                    {/* If the current day is locked, add the lock icon */}
-                    {day > currentDay && (
-                      <MaterialIcons
-                        name="lock"
-                        size={16} // Reduced lock icon size
-                        color="#fff"
-                        style={styles.lockIcon}
-                      />
-                    )}
-                  </View>
-                );
-              })}
-            </ScrollView>
-            {/* Home / Dumbbell Icon */}
-            <View style={styles.iconWrapper}>
-              <TouchableOpacity onPress={handlePress}>
-                {isHome ? (
-                  <MaterialIcons name="home" size={30} color="white" />
-                ) : (
-                  <FontAwesome5 name="dumbbell" size={30} color="white" />
-                )}
-              </TouchableOpacity>
-            </View>
+    <>
+      {/* Header outside SafeAreaView */}
+      <View style={styles.header}>
+        <View style={styles.headerRow}>
+          <Text style={styles.headerText}>Mirmëngjesi Xhes</Text>
+        </View>
+        <View style={styles.headerContent}>
+          {/* Horizontal ScrollView */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContainer}
+            style={styles.scrollView}
+          >
+            {Array.from({ length: 15 }, (_, index) => {
+              const day = index + 1;
+              return (
+                <View key={index} style={styles.circle}>
+                  <Text style={styles.circleText}>{day}</Text>
+                  {/* If the current day is locked, add the lock icon */}
+                  {day > currentDay && (
+                    <MaterialIcons
+                      name="lock"
+                      size={16} // Reduced lock icon size
+                      color="#fff"
+                      style={styles.lockIcon}
+                    />
+                  )}
+                </View>
+              );
+            })}
+          </ScrollView>
+          {/* Home / Dumbbell Icon */}
+          <View style={styles.iconWrapper}>
+            <TouchableOpacity onPress={handlePress}>
+              {isHome ? (
+                <MaterialIcons name="home" size={30} color="white" />
+              ) : (
+                <FontAwesome5 name="dumbbell" size={30} color="white" />
+              )}
+            </TouchableOpacity>
           </View>
         </View>
+      </View>
 
+      {/* SafeAreaView for remaining content */}
+      <SafeAreaView style={styles.safeArea}>
         {/* ScrollView for containers */}
         <ScrollView
           contentContainerStyle={styles.scrollViewContentContainer}
@@ -94,7 +89,7 @@ const App = () => {
               onPress={() => {
                 // Unlock next day when a day is clicked
                 if (item === currentDay) {
-                  setCurrentDay(prevDay => prevDay + 1);
+                  setCurrentDay((prevDay) => prevDay + 1);
                 }
                 router.push('workout');
               }}
@@ -120,8 +115,8 @@ const App = () => {
             </TouchableOpacity>
           ))}
         </ScrollView>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </>
   );
 };
 
