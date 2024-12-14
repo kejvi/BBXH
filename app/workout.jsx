@@ -1,64 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, TextInput, VirtualizedList, Image } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  Image,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+} from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { Video, ResizeMode } from 'expo-av';
 
 const { width } = Dimensions.get('window');
 const IMG_HEIGHT = 235;
+const VISIBLE_COUNT = 4;
 
 const dummyExercise = {
   exercises: [
-    {
-      video: "",
-      workoutName: "Pushups",
-      description: "A basic upper-body exercise to strengthen chest and triceps.",
-    },
-    {
-      workoutName: "Squats",
-      description: "A lower-body exercise targeting quadriceps and glutes.",
-      weights: "",
-    },
-    {
-      workoutName: "Deadlifts",
-      description: "A compound movement for overall strength, primarily back and legs.",
-      weights: "Barbell or dumbbells",
-    },
-    {
-      workoutName: "Bench Press",
-      description: "A chest-focused strength-building exercise.",
-      weights: "Barbell or dumbbells",
-    },
-    {
-      workoutName: "Pull-ups",
-      description: "An upper-body exercise for back and biceps.",
-      weights: "",
-    },
-    {
-      workoutName: "Plank",
-      description: "A core stability exercise to build endurance.",
-      weights: "",
-    },
-    {
-      workoutName: "Lunges",
-      description: "A single-leg exercise for balance and strength in the legs.",
-      weights: "Dumbbells (optional)",
-    },
-    {
-      workoutName: "Shoulder Press",
-      description: "A shoulder-focused exercise for deltoid strength.",
-      weights: "Barbell or dumbbells",
-    },
-    {
-      workoutName: "Bicep Curls",
-      description: "An isolation exercise for bicep muscles.",
-      weights: "Dumbbells",
-    },
-    {
-      workoutName: "Tricep Dips",
-      description: "An exercise for triceps using a bench or parallel bars.",
-      weights: "",
-    },
+    { video: 'https://www.w3schools.com/html/mov_bbb.mp4', workoutName: "Pushups", description: "A basic upper-body exercise to strengthen chest and triceps while its utmost difficult for beginers we recomand that you start light at first and build up your streangth." },
+    { video: 'https://www.youtube.com/results?search_query=dumbbell+workout', workoutName: "Squats", description: "A lower-body exercise targeting quadriceps and glutes." },
+    { video: "https://path/to/video3.mp4", workoutName: "Deadlifts", description: "A compound movement for overall strength, primarily back and legs." },
+    { video: "https://path/to/video4.mp4", workoutName: "Bench Press", description: "A chest-focused strength-building exercise." },
+    { video: "https://path/to/video5.mp4", workoutName: "Pull-ups", description: "An upper-body exercise for back and biceps." },
+    { video: "https://path/to/video6.mp4", workoutName: "Plank", description: "A core stability exercise to build endurance." },
+    { video: "https://path/to/video7.mp4", workoutName: "Lunges", description: "A single-leg exercise for balance and strength in the legs." },
+    { video: "https://path/to/video8.mp4", workoutName: "Shoulder Press", description: "A shoulder-focused exercise for deltoid strength." },
+    { video: "https://path/to/video9.mp4", workoutName: "Bicep Curls", description: "An isolation exercise for bicep muscles." },
+    { video: "https://path/to/video10.mp4", workoutName: "Tricep Dips", description: "An exercise for triceps using a bench or parallel bars that tries to make your life much more difficult that it already is so we try our hardest." },
   ],
 };
 
@@ -66,20 +37,22 @@ const WorkoutView = () => {
   const [lineWidth, setLineWidth] = useState(0);
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [timer, setTimer] = useState(30); // Initial countdown time
-  const [inputText, setInputText] = useState('');
-  const [repsData, setRepsData] = useState([]);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
+  const [weights, setWeights] = useState(Array(dummyExercise.exercises.length).fill(''));
+  const [focusedInputIndex, setFocusedInputIndex] = useState(null);
+  const [completedExercises, setCompletedExercises] = useState([]);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false); // New state to track description expansion
   const router = useRouter();
 
-  // Current exercise
   const currentExercise = dummyExercise.exercises[currentExerciseIndex];
+  const currentVideoUri = currentExercise.video;
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
 
-  // Timer effect
   useEffect(() => {
     let interval;
     if (isTimerActive && timer > 0) {
       interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
+        setTimer((prev) => Math.max(prev - 1));
       }, 1000);
     } else if (timer === 0) {
       setIsTimerActive(false);
@@ -89,69 +62,79 @@ const WorkoutView = () => {
 
   const toggleTimer = () => {
     setIsTimerActive(!isTimerActive);
-    if (!isTimerActive) {
-      setTimer(30); // Reset the timer when starting
-    }
-  };
-
-  const handleAddReps = () => {
-    if (inputText.trim() !== '') {
-      setRepsData([...repsData, inputText.trim()]);
-      setInputText(''); // Clear the input
+    if (isTimerActive) {
+      setTimer(30);
     }
   };
 
   const handleNext = () => {
-    setRepsData([]); // Clear the list on moving to the next exercise
-    setInputText(''); // Clear the input field
     setCurrentExerciseIndex((prevIndex) => Math.min(prevIndex + 1, dummyExercise.exercises.length - 1));
+    setTimer(30); // Reset timer for the new exercise
   };
 
   const handleDone = () => {
     if (currentExerciseIndex === dummyExercise.exercises.length - 1) {
-      // If the user is on the last exercise, navigate to the home screen
       router.push('/home');
     } else {
-      handleNext(); // Otherwise, move to the next exercise
+      setCompletedExercises((prev) => [...prev, currentExerciseIndex]);
+      handleNext();
     }
   };
 
-  const renderReps = ({ item }) => (
-    <Text style={styles.repsItem}>{item}</Text>
-  );
+  const goToNextVideo = () => {
+    if (currentVideoIndex < dummyExercise.exercises.length -1 ) {
+      setCurrentVideoIndex(currentVideoIndex + 1 );
+    }else 
+    setCurrentVideoIndex(0);
+  }
+
+  const visibleExercises = dummyExercise.exercises.slice(currentExerciseIndex, currentExerciseIndex + VISIBLE_COUNT);
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        {/* Video Header */}
-        <Image
-          source={require('../assets/images/Frame 60 (1).png')} // Replace with your video URL
+        <Video
+          source={{ uri: currentVideoUri }}
           style={styles.video}
+          controls
           resizeMode="cover"
         />
+        
+        <View style={styles.exerciseNameContainer}>
+          <Text style={styles.exerciseTitle}>{currentExercise.workoutName}</Text>
+        </View>
 
-        {/* Exercise Name */}
-        <Text style={styles.exerciseTitle}>{currentExercise.workoutName}</Text>
+        <View style={styles.timerContainer}>
+          <TouchableOpacity onPress={toggleTimer} style={styles.timerTouchable}>
+            <FontAwesome5
+              name="stopwatch"
+              size={18}
+              color={isTimerActive ? '#FF69B4' : '#9CA3AF'}
+            />
+            <Text style={[styles.timerText, { color: isTimerActive ? '#FF69B4' : '#9CA3AF' }]}>
+              {timer} sec
+            </Text>
+          </TouchableOpacity>
+        </View>
 
-        {/* Timer */}
-        <TouchableOpacity style={styles.timerContainer} onPress={toggleTimer}>
-          <FontAwesome5
-            name="stopwatch"
-            size={18}
-            color={isTimerActive ? '#FF69B4' : '#9CA3AF'}
-          />
-          <Text style={[styles.timerText, { color: isTimerActive ? '#FF69B4' : '#9CA3AF' }]}>
-            {timer} sec
+        <View style={styles.descriptionContainer}>
+          <Text style={styles.description}>
+            {isDescriptionExpanded
+              ? currentExercise.description
+              : currentExercise.description.length > 100
+              ? `${currentExercise.description.substring(0, 100)}...`
+              : currentExercise.description}
           </Text>
-        </TouchableOpacity>
+          {currentExercise.description.length > 15 && (
+            <TouchableOpacity onPress={() => setIsDescriptionExpanded(!isDescriptionExpanded)}>
+              <Text style={styles.readMoreText}>{isDescriptionExpanded ? 'See less' : 'See more'}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
-        {/* Exercise Description */}
-        <Text style={styles.description}>{currentExercise.description}</Text>
-
-        {/* Highlighted Text */}
-        <View style={styles.highlightedTextContainer}>
-          <Text
-            style={styles.highlightedText}
+        <View style={styles.highlightContainer}>
+          <Text 
+            style={styles.boldHighlightedText} // Bold version
             onLayout={(event) => setLineWidth(event.nativeEvent.layout.width)}
           >
             Ushtrimet e dites
@@ -159,46 +142,48 @@ const WorkoutView = () => {
           <View style={[styles.highlightedLine, { width: lineWidth }]} />
         </View>
 
-        {/* Tabs Section */}
-        <View style={styles.tabsContainer}>
-          {/* Introduction Tab */}
-          <View style={styles.tabContainer}>
-            <Text style={styles.tabTextHighlighted}>Introduction</Text>
-            <Text style={styles.tabContent}>First steps</Text>
-            <Text style={styles.tabContent}>Mental preparation</Text>
-            <Text style={styles.tabContent}>Tactic</Text>
-          </View>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          {visibleExercises.map((exercise, index) => (
+            <View key={index} style={[styles.scrollItem, index === 0 ? styles.highlighted : null]}>
+              {index === 0 && (
+                <TouchableOpacity style={styles.playIcon} onPress={toggleTimer}>
+                  <FontAwesome5
+                    name={isTimerActive ? 'pause' : 'play'}
+                    size={12}
+                    color={isTimerActive ? '#FF69B4' : '#4B5563'}
+                  />
+                </TouchableOpacity>
+              )}
+              <View style={styles.textContainer}>
+                <Text style={styles.scrollText}>{exercise.workoutName}</Text>
+              </View>
+              <TextInput
+                style={[
+                  styles.weightInput,
+                  focusedInputIndex === index 
+                ]}
+                placeholder="Weight"
+                keyboardType="numeric"
+                value={weights[index]}
+                onFocus={() => setFocusedInputIndex(index)}
+                onBlur={() => setFocusedInputIndex(null)}
+                onChangeText={(text) => {
+                  const updatedWeights = [...weights];
+                  updatedWeights[index] = text;
+                  setWeights(updatedWeights);
+                }}
+              />
+            </View>
+          ))}
+        </ScrollView>
+      </View>
 
-          {/* Pesha Tab */}
-          <View style={styles.tabContainer}>
-            <Text style={styles.tabTextHighlighted}>Pesha</Text>
-            <Text style={styles.tabContent}>{currentExercise.weights || 'Not specified'}</Text>
-
-            {/* Text Input for Reps */}
-            <TextInput
-              style={styles.input}
-              placeholder="E.g., 15 reps with 15 kg"
-              value={inputText}
-              onChangeText={setInputText}
-            />
-            <TouchableOpacity style={styles.addButton} onPress={handleAddReps}>
-              <Text style={styles.addButtonText}>Add</Text>
-            </TouchableOpacity>
-
-            {/* Display Reps */}
-            <VirtualizedList
-              data={repsData}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={renderReps}
-              getItemCount={(data) => data.length}
-              getItem={(data, index) => data[index]}
-              style={styles.repsList}
-            />
-          </View>
-        </View>
-
-        {/* Next or Done Button */}
-        <TouchableOpacity style={styles.nextButton} onPress={handleDone}>
+      <View style={[styles.buttonContainer, styles.nextButtonContainer]}>
+        <TouchableOpacity style={styles.nextButton} onPress={() =>{ goToNextVideo(); handleDone();}}>
           <Text style={styles.nextButtonText}>
             {currentExerciseIndex === dummyExercise.exercises.length - 1 ? 'Done' : 'Next'}
           </Text>
@@ -215,136 +200,133 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    paddingBottom: 40,
     alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    position: 'relative',
   },
   video: {
-    width: width,
+    width: width - 32,
     height: IMG_HEIGHT,
+    borderRadius: 16,
+  },
+  exerciseNameContainer: {
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    marginVertical: 8,
+    width: '100%',
   },
   exerciseTitle: {
     fontSize: 24,
-    fontWeight: '400',
-    lineHeight: 29.05,
-    textAlign: 'left',
-    marginVertical: 20,
-    alignSelf: 'flex-start',
-    width: '90%',
+    fontWeight: 'bold',
   },
   timerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 10,
+    marginVertical: 8,
+    width: '100%',
     justifyContent: 'flex-start',
-    alignSelf: 'flex-start',
-    width: '90%',
   },
   timerText: {
     fontSize: 16,
-    marginLeft: 5,
+    marginLeft: 4,
+  },
+  descriptionContainer: {
+    marginVertical: 16,
+    width: '100%',
   },
   description: {
-    fontSize: 14,
-    textAlign: 'left',
-    color: '#666',
-    marginVertical: 10,
-    alignSelf: 'flex-start',
-    width: '90%',
-  },
-  highlightedTextContainer: {
-    alignSelf: 'flex-start',
-    marginVertical: 10,
-    alignItems: 'center',
-  },
-  highlightedText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: 'black',
+    color: '#6B7280',
+  },
+  readMoreText: {
+    color: '#FF69B4',
+    fontSize: 14,
+  },
+  highlightContainer: {
+    alignItems: 'flex-start',
+    marginBottom: 16,
+    width: '100%',
+  },
+  boldHighlightedText: {
+    fontSize: 20,
+    fontWeight: 'bold', // Make the text bold
+    color: '#9CA3AF',
+    marginBottom: 4,
   },
   highlightedLine: {
     height: 2,
     backgroundColor: '#FF69B4',
-    marginTop: 5,
   },
-  tabsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 20,
+  scrollView: {
+    flex: 1,
     width: '100%',
-    alignItems: 'flex-start',
-    marginBottom: 40,
   },
-  tabContainer: {
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    width: '48%',
+  scrollContainer: {
+    flexGrow: 1,
+  },
+  scrollItem: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 10,
-    backgroundColor: '#F8F9FA',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
+    justifyContent: 'space-between',
+    padding: 12,
+    height: 55,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    marginBottom: 8,
   },
-  tabTextHighlighted: {
-    backgroundColor: '#E5E7EB',
-    paddingVertical: 14,
-    paddingHorizontal: 15,
-    borderRadius: 5,
+  highlighted: {
+    backgroundColor: 'rgb(222, 223, 228)',
+  },
+  scrollText: {
+    fontSize: 16,
+    color: '#6B7280',
+  },
+  playIcon: {
+    marginRight: 8,
+  },
+  textContainer: {
+    flex: 1,
+  },
+  weightInput: {
+    width: 70,
+    height: 40,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    fontSize: 16,
+  },
+  unfocusedInput: {
+    backgroundColor: '#FFF',
+    color: '#6B7280',
+  },
+  focusedInput: {
+    backgroundColor: '#D1D5DB',
+    color: '#FFF',
+  },
+  nextButtonText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 10,
+    color: '#FFF',
   },
-  tabContent: {
-    fontSize: 14,
-    color: '#444',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  input: {
-    width: '100%',
-    padding: 10,
-    borderColor: '#ddd',
-    borderWidth: 1,
-    borderRadius: 5,
-    marginBottom: 10,
-  },
-  addButton: {
-    backgroundColor: '#FF69B4',
-    paddingVertical: 10,
-    borderRadius: 5,
-    width: '100%',
+  buttonContainer: {
+    padding: 16,
     alignItems: 'center',
-  },
-  addButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  repsList: {
-    width: '100%',
-  },
-  repsItem: {
-    marginTop: 5,
-    color: '#333',
-    fontSize: 14,
   },
   nextButton: {
     backgroundColor: '#FF69B4',
-    paddingVertical: 15,
-    borderRadius: 10,
+    padding: 12,
+    borderRadius: 8,
     alignItems: 'center',
-    marginTop: 40,
     width: '100%',
   },
-  nextButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
+  nextButtonContainer: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  icon: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
   },
 });
 

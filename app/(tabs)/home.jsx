@@ -31,6 +31,7 @@ const App = () => {
 
   return (
     <>
+    <SafeAreaView style={styles.ara}>
       {/* Header outside SafeAreaView */}
       <View style={styles.header}>
         <View style={styles.headerRow}>
@@ -74,7 +75,7 @@ const App = () => {
           </View>
         </View>
       </View>
-
+      </SafeAreaView>
       {/* SafeAreaView for remaining content */}
       <SafeAreaView style={styles.safeArea}>
         {/* ScrollView for containers */}
@@ -121,6 +122,9 @@ const App = () => {
 };
 
 const styles = StyleSheet.create({
+  ara: {
+     paddingBottom: -50,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: '#fff',

@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Login = () => {
   return (
-    <SafeAreaView style={styles.safeArea}>
+   
       <View style={styles.container}>
         <Image
           source={require('../assets/images/Rectangle 23.png')}
@@ -44,15 +44,11 @@ const Login = () => {
           </TouchableOpacity>
         </View>
       </View>
-    </SafeAreaView>
+    
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#060A11', // Ensures background color in safe areas
-  },
   container: {
     flex: 1,
     width: '100%',
