@@ -13,39 +13,53 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Video, ResizeMode } from 'expo-av';
+import axios from 'axios';
+import { useLocalSearchParams, useSearchParams } from 'expo-router/build/hooks';
 
 const { width } = Dimensions.get('window');
 const IMG_HEIGHT = 235;
 const VISIBLE_COUNT = 4;
 
-const dummyExercise = {
-  exercises: [
-    { video: 'https://www.w3schools.com/html/mov_bbb.mp4', workoutName: "Pushups", description: "A basic upper-body exercise to strengthen chest and triceps while its utmost difficult for beginers we recomand that you start light at first and build up your streangth." },
-    { video: 'https://www.youtube.com/results?search_query=dumbbell+workout', workoutName: "Squats", description: "A lower-body exercise targeting quadriceps and glutes." },
-    { video: "https://path/to/video3.mp4", workoutName: "Deadlifts", description: "A compound movement for overall strength, primarily back and legs." },
-    { video: "https://path/to/video4.mp4", workoutName: "Bench Press", description: "A chest-focused strength-building exercise." },
-    { video: "https://path/to/video5.mp4", workoutName: "Pull-ups", description: "An upper-body exercise for back and biceps." },
-    { video: "https://path/to/video6.mp4", workoutName: "Plank", description: "A core stability exercise to build endurance." },
-    { video: "https://path/to/video7.mp4", workoutName: "Lunges", description: "A single-leg exercise for balance and strength in the legs." },
-    { video: "https://path/to/video8.mp4", workoutName: "Shoulder Press", description: "A shoulder-focused exercise for deltoid strength." },
-    { video: "https://path/to/video9.mp4", workoutName: "Bicep Curls", description: "An isolation exercise for bicep muscles." },
-    { video: "https://path/to/video10.mp4", workoutName: "Tricep Dips", description: "An exercise for triceps using a bench or parallel bars that tries to make your life much more difficult that it already is so we try our hardest." },
-  ],
-};
-
 const WorkoutView = () => {
+  const {id}  = useLocalSearchParams()
+
   const [lineWidth, setLineWidth] = useState(0);
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [timer, setTimer] = useState(30); // Initial countdown time
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
-  const [weights, setWeights] = useState(Array(dummyExercise.exercises.length).fill(''));
+  const [weights, setWeights] = useState([]);
   const [focusedInputIndex, setFocusedInputIndex] = useState(null);
   const [completedExercises, setCompletedExercises] = useState([]);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false); // New state to track description expansion
+  const [workoutData, setWorkoutData] = useState(null); // State to store fetched workout data
+  const [exercises, setExercises] = useState([]); // State to store exercises fetched from API
   const router = useRouter();
 
-  const currentExercise = dummyExercise.exercises[currentExerciseIndex];
-  const currentVideoUri = currentExercise.video;
+// console.log("Workout id",router.params)
+
+  const fetchWorkoutData = async () => {
+    const options = {
+      method: 'GET',
+      url: `https://stoplight.io/mocks/gym-app-ira/bodie-by-xhess/674100124/user/workouts/${id}`,
+      headers: { Accept: 'application/json', Authorization: 'Bearer 123' },
+    };
+
+    try {
+      const { data } = await axios.request(options);
+      setWorkoutData(data.workout);
+      setExercises(data.exercises);
+      setWeights(Array(data.exercises.length).fill('')); // Initialize weights with an empty array of the same length as exercises
+    } catch (error) {
+      console.error('Error fetching workout data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchWorkoutData();
+  }, []);
+
+  const currentExercise = exercises[currentExerciseIndex] || {};
+  const currentVideoUri = currentExercise.exercise?.videoUrl || '';
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
 
   useEffect(() => {
@@ -68,12 +82,12 @@ const WorkoutView = () => {
   };
 
   const handleNext = () => {
-    setCurrentExerciseIndex((prevIndex) => Math.min(prevIndex + 1, dummyExercise.exercises.length - 1));
+    setCurrentExerciseIndex((prevIndex) => Math.min(prevIndex + 1, exercises.length - 1));
     setTimer(30); // Reset timer for the new exercise
   };
 
   const handleDone = () => {
-    if (currentExerciseIndex === dummyExercise.exercises.length - 1) {
+    if (currentExerciseIndex === exercises.length - 1) {
       router.push('/home');
     } else {
       setCompletedExercises((prev) => [...prev, currentExerciseIndex]);
@@ -82,29 +96,33 @@ const WorkoutView = () => {
   };
 
   const goToNextVideo = () => {
-    if (currentVideoIndex < dummyExercise.exercises.length -1 ) {
-      setCurrentVideoIndex(currentVideoIndex + 1 );
-    }else 
-    setCurrentVideoIndex(0);
-  }
+    if (currentVideoIndex < exercises.length - 1) {
+      setCurrentVideoIndex(currentVideoIndex + 1);
+    } else {
+      setCurrentVideoIndex(0);
+    }
+  };
 
-  const visibleExercises = dummyExercise.exercises.slice(currentExerciseIndex, currentExerciseIndex + VISIBLE_COUNT);
+  const visibleExercises = exercises.slice(currentExerciseIndex, currentExerciseIndex + VISIBLE_COUNT);
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Video
-          source={{ uri: currentVideoUri }}
-          style={styles.video}
-          controls
-          resizeMode="cover"
-        />
-        
+        {currentVideoUri && (
+          <Video
+            source={{ uri: currentVideoUri }}
+            style={styles.video}
+            controls
+            resizeMode="cover"
+          />
+        )}
+{/* 
         <View style={styles.exerciseNameContainer}>
-          <Text style={styles.exerciseTitle}>{currentExercise.workoutName}</Text>
-        </View>
+          <Text style={styles.exerciseTitle}>{currentExercise.exercise?.name}</Text>
+        </View> */}
 
         <View style={styles.timerContainer}>
+        <Text style={styles.exerciseTitle}>{currentExercise.exercise?.name}</Text>
           <TouchableOpacity onPress={toggleTimer} style={styles.timerTouchable}>
             <FontAwesome5
               name="stopwatch"
@@ -115,25 +133,37 @@ const WorkoutView = () => {
               {timer} sec
             </Text>
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.descriptionContainer}>
           <Text style={styles.description}>
             {isDescriptionExpanded
-              ? currentExercise.description
-              : currentExercise.description.length > 100
-              ? `${currentExercise.description.substring(0, 100)}...`
-              : currentExercise.description}
+              ? currentExercise.exercise?.description
+              : currentExercise.exercise?.description?.length > 100
+              ? `${currentExercise.exercise?.description.substring(0, 100)}...`
+              : currentExercise.exercise?.description}
           </Text>
-          {currentExercise.description.length > 15 && (
+          {currentExercise.exercise?.description?.length > 15 && (
             <TouchableOpacity onPress={() => setIsDescriptionExpanded(!isDescriptionExpanded)}>
               <Text style={styles.readMoreText}>{isDescriptionExpanded ? 'See less' : 'See more'}</Text>
             </TouchableOpacity>
           )}
         </View>
 
+        {/* <View style={styles.descriptionContainer}>
+          <Text style={styles.description}>
+            {isDescriptionExpanded
+              ? currentExercise.exercise?.description
+              : currentExercise.exercise?.description?.length > 100
+              ? `${currentExercise.exercise?.description.substring(0, 100)}...`
+              : currentExercise.exercise?.description}
+          </Text>
+          {currentExercise.exercise?.description?.length > 15 && (
+            <TouchableOpacity onPress={() => setIsDescriptionExpanded(!isDescriptionExpanded)}>
+              <Text style={styles.readMoreText}>{isDescriptionExpanded ? 'See less' : 'See more'}</Text>
+            </TouchableOpacity>
+          )}
+        </View> */}
+
         <View style={styles.highlightContainer}>
-          <Text 
+          <Text
             style={styles.boldHighlightedText} // Bold version
             onLayout={(event) => setLineWidth(event.nativeEvent.layout.width)}
           >
@@ -159,12 +189,12 @@ const WorkoutView = () => {
                 </TouchableOpacity>
               )}
               <View style={styles.textContainer}>
-                <Text style={styles.scrollText}>{exercise.workoutName}</Text>
+                <Text style={styles.scrollText}>{exercise.exercise?.name}</Text>
               </View>
               <TextInput
                 style={[
                   styles.weightInput,
-                  focusedInputIndex === index 
+                  focusedInputIndex === index ? styles.focusedInput : styles.unfocusedInput,
                 ]}
                 placeholder="Weight"
                 keyboardType="numeric"
@@ -183,9 +213,9 @@ const WorkoutView = () => {
       </View>
 
       <View style={[styles.buttonContainer, styles.nextButtonContainer]}>
-        <TouchableOpacity style={styles.nextButton} onPress={() =>{ goToNextVideo(); handleDone();}}>
+        <TouchableOpacity style={styles.nextButton} onPress={() => { goToNextVideo(); handleDone(); }}>
           <Text style={styles.nextButtonText}>
-            {currentExerciseIndex === dummyExercise.exercises.length - 1 ? 'Done' : 'Next'}
+            {currentExerciseIndex === exercises.length - 1 ? 'Done' : 'Next'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -218,18 +248,22 @@ const styles = StyleSheet.create({
   },
   exerciseTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
   },
-  timerContainer: {
+  timerTouchable: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 8,
+  },
+  timerContainer: {
     width: '100%',
-    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+    marginVertical: 8,
+    marginLeft:25,
+    justifyContent: 'space-between',
+    gap: 5,
   },
   timerText: {
     fontSize: 16,
-    marginLeft: 4,
+    marginLeft: 8,
   },
   descriptionContainer: {
     marginVertical: 16,
@@ -247,11 +281,10 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 16,
     width: '100%',
+    marginLeft: 7,
   },
   boldHighlightedText: {
     fontSize: 20,
-    fontWeight: 'bold', // Make the text bold
-    color: '#9CA3AF',
     marginBottom: 4,
   },
   highlightedLine: {
@@ -274,13 +307,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 8,
     marginBottom: 8,
+    marginLeft:5,
+    marginRight:5,
   },
   highlighted: {
     backgroundColor: 'rgb(222, 223, 228)',
   },
   scrollText: {
     fontSize: 16,
-    color: '#6B7280',
   },
   playIcon: {
     marginRight: 8,
@@ -296,12 +330,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   unfocusedInput: {
-    backgroundColor: '#FFF',
+    
     color: '#6B7280',
   },
   focusedInput: {
     backgroundColor: '#D1D5DB',
-    color: '#FFF',
+    
   },
   nextButtonText: {
     fontSize: 16,
@@ -318,6 +352,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     width: '100%',
+    marginBottom: 30,
   },
   nextButtonContainer: {
     padding: 16,

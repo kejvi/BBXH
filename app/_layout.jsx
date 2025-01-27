@@ -18,7 +18,7 @@ export default function RootLayout() {
           headerTransparent: true,
           headerTitle: "",
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.push('/home')}>
+            <TouchableOpacity onPress={() => router.back('/home')}>
               <View>
                 <Feather name="arrow-left" size={20} style={{ color: '#FFFFFF' }} />
               </View>
